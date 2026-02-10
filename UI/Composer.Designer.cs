@@ -1,4 +1,4 @@
-﻿namespace  Garry.Control4.Jailbreak.UI
+namespace  Garry.Control4.Jailbreak.UI
 {
 	partial class Composer
 	{
@@ -41,6 +41,9 @@
             this.label3 = new System.Windows.Forms.Label();
             this.checkBoxBlockSplitIo = new System.Windows.Forms.CheckBox();
             this.button5 = new System.Windows.Forms.Button();
+            this.labelManagementPack = new System.Windows.Forms.Label();
+            this.labelManagementPackDesc = new System.Windows.Forms.Label();
+            this.buttonInstallMgmtPack = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -154,10 +157,15 @@
             this.tableLayoutPanel1.Controls.Add(this.label8, 0, 7);
             this.tableLayoutPanel1.Controls.Add(this.label9, 0, 6);
             this.tableLayoutPanel1.Controls.Add(this.button2, 1, 5);
+            this.tableLayoutPanel1.Controls.Add(this.labelManagementPack, 0, 9);
+            this.tableLayoutPanel1.Controls.Add(this.labelManagementPackDesc, 0, 10);
+            this.tableLayoutPanel1.Controls.Add(this.buttonInstallMgmtPack, 1, 10);
             this.tableLayoutPanel1.Location = new System.Drawing.Point(24, 31);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 10;
+            this.tableLayoutPanel1.RowCount = 12;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -168,7 +176,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(952, 861);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(952, 1000);
             this.tableLayoutPanel1.TabIndex = 26;
             // 
             // label5
@@ -241,10 +249,55 @@
             this.button5.UseVisualStyleBackColor = true;
             this.button5.Click += new System.EventHandler(this.UpdateCertificates);
             // 
+            // labelManagementPack
+            //
+            this.labelManagementPack.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelManagementPack.AutoSize = true;
+            this.tableLayoutPanel1.SetColumnSpan(this.labelManagementPack, 2);
+            this.labelManagementPack.Font = new System.Drawing.Font("Microsoft YaHei", 16F, System.Drawing.FontStyle.Bold);
+            this.labelManagementPack.ForeColor = System.Drawing.SystemColors.Highlight;
+            this.labelManagementPack.Location = new System.Drawing.Point(0, 820);
+            this.labelManagementPack.Margin = new System.Windows.Forms.Padding(0, 14, 0, 28);
+            this.labelManagementPack.Name = "labelManagementPack";
+            this.labelManagementPack.Size = new System.Drawing.Size(952, 57);
+            this.labelManagementPack.TabIndex = 26;
+            this.labelManagementPack.Text = "MANAGEMENT PACKS";
+            //
+            // labelManagementPackDesc
+            //
+            this.labelManagementPackDesc.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelManagementPackDesc.Location = new System.Drawing.Point(6, 905);
+            this.labelManagementPackDesc.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.labelManagementPackDesc.Name = "labelManagementPackDesc";
+            this.labelManagementPackDesc.Size = new System.Drawing.Size(670, 65);
+            this.labelManagementPackDesc.TabIndex = 27;
+            this.labelManagementPackDesc.Text = "Management packs contain driver definitions that Composer needs for your OS versio" +
+    "n. Download and install the matching pack before launching Composer.";
+            //
+            // buttonInstallMgmtPack
+            //
+            this.buttonInstallMgmtPack.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.buttonInstallMgmtPack.Image = global::Garry.Control4.Jailbreak.Properties.Resources.download;
+            this.buttonInstallMgmtPack.Location = new System.Drawing.Point(688, 908);
+            this.buttonInstallMgmtPack.Margin = new System.Windows.Forms.Padding(6);
+            this.buttonInstallMgmtPack.Name = "buttonInstallMgmtPack";
+            this.buttonInstallMgmtPack.Size = new System.Drawing.Size(258, 65);
+            this.buttonInstallMgmtPack.TabIndex = 28;
+            this.buttonInstallMgmtPack.Text = " Install Management Pack";
+            this.buttonInstallMgmtPack.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.buttonInstallMgmtPack.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.buttonInstallMgmtPack.UseVisualStyleBackColor = true;
+            this.buttonInstallMgmtPack.Click += new System.EventHandler(this.InstallManagementPack);
+            //
             // Composer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScroll = true;
             this.BackColor = System.Drawing.SystemColors.Window;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(6);
@@ -269,5 +322,8 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button button5;
         public System.Windows.Forms.CheckBox checkBoxBlockSplitIo;
+        private System.Windows.Forms.Label labelManagementPack;
+        private System.Windows.Forms.Label labelManagementPackDesc;
+        private System.Windows.Forms.Button buttonInstallMgmtPack;
     }
 }

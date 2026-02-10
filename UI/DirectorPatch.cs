@@ -143,46 +143,79 @@ namespace Garry.Control4.Jailbreak.UI
                     PatchDirectorySshAuthorizedKeysFile(log, scp, localKeysFolder);
                 }
 
-                log.WriteNormal("Patching client CA certs:\n");
-
-                // Get the existing files
-                log.WriteNormal($"  Reading {Constants.CertsFolder}/public.pem... ");
+                log.WriteNormal($"Reading {Constants.CertsFolder}/public.pem... ");
                 var localCert = File.ReadAllText($"{Constants.CertsFolder}/public.pem").Trim();
-                log.WriteSuccess($"done - got {localCert.Length} bytes\n");
+                log.WriteSuccess($"done - got {localCert.Length} bytes\n\n");
 
-                log.WriteNormal("  Downloading /etc/openvpn/clientca-prod.pem... ");
-                var remoteCertChain = DownloadFile(scp, "/etc/openvpn/clientca-prod.pem").Trim();
-                log.WriteSuccess($"done - got {remoteCertChain.Length} bytes\n");
+                // Patch all client CA cert chain files that Director and nginx use.
+                // OS 4.0 and earlier used /etc/openvpn/clientca-prod.pem.
+                // OS 4.1+ moved to /opt/control4/etc/ssl/certs/clientca-prod.pem for both
+                // the Director (port 5021) and nginx (port 443).
+                PatchRemoteCertChain(log, scp, "/etc/openvpn/clientca-prod.pem", localCert);
+                PatchRemoteCertChain(log, scp, "/opt/control4/etc/ssl/certs/clientca-prod.pem", localCert);
 
-                // Dedupe here just to ensure we don't need to remove any previous duplicate JB certs.
-                var dedupedRemoteCertChain = DedupeX509CertChain(remoteCertChain);
-                if (remoteCertChain == dedupedRemoteCertChain && remoteCertChain.Contains(localCert))
-                {
-                    log.WriteTrace("  (already patched)\n");
-                    return true;
-                }
+                // Also patch the MQTT broker CA chain
+                PatchRemoteCertChain(log, scp, "/etc/mosquitto/certs/ca-chain.pem", localCert);
+            }
 
-                var backupFilename = $"clientca-prod.{DateTime.Now:yyyy-dd-M--HH-mm-ss}.backup";
-
-                log.WriteNormal($"  Saving remote backup to /etc/openvpn/{backupFilename}... ");
-                UploadFile(scp, $"/etc/openvpn/{backupFilename}", remoteCertChain);
+            // Reload nginx so it picks up the new client CA cert
+            using (var ssh = new SshClient(SshConnection()))
+            {
+                ssh.Connect();
+                log.WriteNormal("\nReloading nginx to apply cert changes... ");
+                ssh.RunCommand("nginx -s reload");
                 log.WriteSuccess("done\n");
-
-                log.WriteNormal($"  Saving local backup to {Constants.CertsFolder}/{backupFilename}... ");
-                File.WriteAllText($"{Constants.CertsFolder}/{backupFilename}", remoteCertChain);
-                log.WriteSuccess("done\n");
-
-                // We just add our public key to the end then dedupe the certs. Dedupe is important
-                // because if multiple certs end up in this file with the same subject, the
-                // controller appears to not load any CAs and composer will not connect.
-                remoteCertChain = DedupeX509CertChain(dedupedRemoteCertChain + "\n" + localCert);
-
-                log.WriteNormal("  Updating remote client CA cert... ");
-                UploadFile(scp, "/etc/openvpn/clientca-prod.pem", remoteCertChain);
-                log.WriteSuccess("done\n");
+                ssh.Disconnect();
             }
 
             return true;
+        }
+
+        private static void PatchRemoteCertChain(LogWindow log, ScpClient scp, string remoteFile, string localCert)
+        {
+            log.WriteNormal($"Patching {remoteFile}:\n");
+
+            string remoteCertChain;
+            try
+            {
+                log.WriteNormal($"  Downloading {remoteFile}... ");
+                remoteCertChain = DownloadFile(scp, remoteFile).Trim();
+                log.WriteSuccess($"done - got {remoteCertChain.Length} bytes\n");
+            }
+            catch (ScpException)
+            {
+                log.WriteTrace("  file doesn't exist - skipping\n");
+                return;
+            }
+
+            // Dedupe here just to ensure we don't need to remove any previous duplicate JB certs.
+            var dedupedRemoteCertChain = DedupeX509CertChain(remoteCertChain);
+            if (remoteCertChain == dedupedRemoteCertChain && remoteCertChain.Contains(localCert))
+            {
+                log.WriteTrace("  (already patched)\n");
+                return;
+            }
+
+            var directory = (Path.GetDirectoryName(remoteFile) ?? "").Replace("\\", "/");
+            var fileName = Path.GetFileName(remoteFile);
+            var backupFilename = $"{fileName}.{DateTime.Now:yyyy-dd-M--HH-mm-ss}.backup";
+
+            log.WriteNormal($"  Saving remote backup to {directory}/{backupFilename}... ");
+            UploadFile(scp, $"{directory}/{backupFilename}", remoteCertChain);
+            log.WriteSuccess("done\n");
+
+            log.WriteNormal($"  Saving local backup to {Constants.CertsFolder}/{backupFilename}... ");
+            File.WriteAllText($"{Constants.CertsFolder}/{backupFilename}", remoteCertChain);
+            log.WriteSuccess("done\n");
+
+            // We just add our public key to the end then dedupe the certs. Dedupe is important
+            // because if multiple certs end up in this file with the same subject, the
+            // controller appears to not load any CAs and composer will not connect.
+            remoteCertChain = DedupeX509CertChain(dedupedRemoteCertChain + "\n" + localCert);
+
+            log.WriteNormal($"  Updating {remoteFile}... ");
+            UploadFile(scp, remoteFile, remoteCertChain);
+            log.WriteSuccess("done\n");
         }
 
         private static string DedupeX509CertChain(string certChain)

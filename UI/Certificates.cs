@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
@@ -84,10 +84,11 @@ namespace Garry.Control4.Jailbreak.UI
                 var exitCode = RunProcessPrintOutput(
                     log,
                     Constants.OpenSslExe,
-                    "req -new -x509 -sha1 -nodes " +
+                    "req -new -x509 -sha256 -nodes " +
                     $"-days {Constants.CertificateExpireDays} " +
-                    "-newkey rsa:1024 " +
+                    "-newkey rsa:2048 " +
                     $"-keyout \"{Constants.CertsFolder}/private.key\" " +
+                    "-extensions v3_ca " +
                     "-subj \"/C=US/ST=Utah/L=Draper/O=Control4 Corporation/CN=Control4 Corporation CA/emailAddress=pki@control4.com/\" " +
                     $"-out \"{Constants.CertsFolder}/public.pem\""
                 );

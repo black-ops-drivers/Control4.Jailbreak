@@ -1,4 +1,4 @@
-﻿namespace Garry.Control4.Jailbreak
+namespace Garry.Control4.Jailbreak
 {
     public static class Constants
     {
@@ -60,5 +60,23 @@
         /// redirecting "split.io" and "sdk.split.io" to localhost.
         /// </summary>
         public const string BlockSplitIoHostsEntry = @"127.0.0.1  split.io sdk.split.io";
+
+        /// <summary>
+        /// The SOAP endpoint for the Control4 Updates service that provides package listings.
+        /// Used by the jailbreak tool's own management pack download feature.
+        /// </summary>
+        public const string UpdatesServiceUrl = "https://services.control4.com/Updates2x/v2_0/Updates.asmx";
+
+        /// <summary>
+        /// The "experience" Updates SOAP endpoint that returns X4+ versions.
+        /// Normally provided by the cloud service's ConnectStatus.UpdateManagerUrl,
+        /// but since we skip cloud auth, we write this into ComposerUpdateManagerSettings.Config.
+        /// </summary>
+        public const string UpdatesExperienceUrl = "https://services.control4.com/Updates2x-experience/v2_0/Updates.asmx";
+
+        /// <summary>
+        /// The XML namespace used in SOAP requests/responses for the Updates service.
+        /// </summary>
+        public const string UpdatesSoapNamespace = "http://services.control4.com/updates/v2_0/";
     }
 }
