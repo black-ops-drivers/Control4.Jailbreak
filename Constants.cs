@@ -2,7 +2,7 @@ namespace Garry.Control4.Jailbreak
 {
     public static class Constants
     {
-        public const int Version = 6;
+        public const int Version = 7;
 
         /// <summary>
         /// The cert for composer needs to be named cacert-*.pem
@@ -36,19 +36,19 @@ namespace Garry.Control4.Jailbreak
         public const int CertificateExpireDays = 3650;
 
         /// <summary>
-        /// Where OpenSSL is installed (it's installed with Composer)
-        /// </summary>
-        public const string OpenSslExe = @"C:\Program Files (x86)\Control4\Composer\Pro\RemoteAccess\bin\openssl.exe";
-
-        /// <summary>
         /// Where OpenSSL's Config is located (it's installed with Composer)
         /// </summary>
         public const string OpenSslConfig = @"Certs\openssl.cfg";
 
         /// <summary>
-        /// What version of Director/Composer we're aiming at
+        /// The OS version this tool was tested against.
         /// </summary>
-        public const string TargetDirectorVersion = @"3.4.3.741643";
+        public const string TargetOsVersion = @"4.1.0.743847";
+
+        /// <summary>
+        /// The Composer version this tool was tested against.
+        /// </summary>
+        public const string TargetComposerVersion = @"2025.11.26";
 
         /// <summary>
         /// The file path to the Windows Hosts file, typically used for mapping hostnames to IP addresses.
@@ -78,5 +78,17 @@ namespace Garry.Control4.Jailbreak
         /// The XML namespace used in SOAP requests/responses for the Updates service.
         /// </summary>
         public const string UpdatesSoapNamespace = "http://services.control4.com/updates/v2_0/";
+
+        /// <summary>
+        /// Bump this when cert generation parameters change (openssl.cfg, key size, subject, etc.).
+        /// Stored in Certs/.schema-version. Missing or mismatched triggers root CA regeneration.
+        /// </summary>
+        public const int CertSchemaVersion = 1;
+
+        /// <summary>
+        /// Marker file on the controller written after cert changes. Lives in /tmp so it's
+        /// cleared on reboot, letting us detect whether a pending reboot has been completed.
+        /// </summary>
+        public const string RebootMarkerPath = "/tmp/.jailbreak-reboot-pending";
     }
 }

@@ -66,6 +66,13 @@ namespace Garry.Control4.Jailbreak.UI
             Write(v);
         }
 
+        internal void WriteHeader(string title)
+        {
+            var line = new string('\u2500', 50 - title.Length);
+            textBox.SelectionColor = Color.Blue;
+            Write($"\n\u2500\u2500 {title} {line}\n");
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             Close();

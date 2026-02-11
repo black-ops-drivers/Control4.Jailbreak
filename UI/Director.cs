@@ -29,19 +29,13 @@ namespace Garry.Control4.Jailbreak.UI
         {
             try
             {
-                _mainWindow.DirectorPatch.IpAddress.Text = connection.EndPoint.Address.ToString();
-                _mainWindow.SetStatusRight($"Connected to {connection.EndPoint.Address}");
+                _mainWindow.Jailbreak.IpAddress.Text = connection.EndPoint.Address.ToString();
                 return true;
             }
             catch (System.Exception)
             {
                 return false;
             }
-        }
-
-        internal void DirectorDisconnected()
-        {
-            _mainWindow.SetStatusRight("Not Connected");
         }
     }
 }

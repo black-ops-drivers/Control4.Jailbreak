@@ -87,26 +87,14 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="UI\Certificates.cs">
+    <Compile Include="UI\Jailbreak.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\Certificates.Designer.cs">
-      <DependentUpon>Certificates.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\DirectorPatch.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\DirectorPatch.Designer.cs">
-      <DependentUpon>DirectorPatch.cs</DependentUpon>
+    <Compile Include="UI\Jailbreak.Designer.cs">
+      <DependentUpon>Jailbreak.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\Director.cs">
       <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\Composer.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\Composer.Designer.cs">
-      <DependentUpon>Composer.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\LogWindow.cs">
       <SubType>Form</SubType>
@@ -127,14 +115,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility\Sddp.cs" />
     <Compile Include="Utility\Sddp.DeviceResponse.cs" />
-    <EmbeddedResource Include="UI\Certificates.resx">
-      <DependentUpon>Certificates.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\DirectorPatch.resx">
-      <DependentUpon>DirectorPatch.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Composer.resx">
-      <DependentUpon>Composer.cs</DependentUpon>
+    <EmbeddedResource Include="UI\Jailbreak.resx">
+      <DependentUpon>Jailbreak.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\LogWindow.resx">
       <DependentUpon>LogWindow.cs</DependentUpon>
