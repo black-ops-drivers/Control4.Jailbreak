@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using Garry.Control4.Jailbreak.Properties;
 
@@ -6,11 +6,8 @@ namespace Garry.Control4.Jailbreak.UI
 {
     public partial class MainWindow : Form
     {
-        private Certificates Certificates { get; }
-        private Composer Composer { get; }
+        public Jailbreak Jailbreak { get; }
         private Director Director { get; }
-
-        public DirectorPatch DirectorPatch { get; }
 
 
         public MainWindow()
@@ -29,26 +26,23 @@ namespace Garry.Control4.Jailbreak.UI
 
             System.IO.File.WriteAllBytes($"{Constants.CertsFolder}/openssl.cfg", Resources.openssl);
 
-            Text += $@" - v{Constants.Version} - For C4 v{Constants.TargetDirectorVersion}";
-
-            TabControl.TabPages.Clear();
+            Text += $@" v{Constants.Version} ({Constants.TargetComposerVersion} / {Constants.TargetOsVersion})";
 
             Director = new Director(this);
 
-            Certificates = new Certificates(this);
-            TabControl.TabPages.Add("Certificates");
-            Certificates.Parent = TabControl.TabPages[0];
-            Certificates.Dock = DockStyle.Fill;
+            Jailbreak = new Jailbreak(this);
+            Jailbreak.Dock = DockStyle.Fill;
+            splitContainer3.Panel1.Controls.Add(Jailbreak);
 
-            Composer = new Composer(this);
-            TabControl.TabPages.Add("Composer");
-            Composer.Parent = TabControl.TabPages[1];
-            Composer.Dock = DockStyle.Fill;
-
-            DirectorPatch = new DirectorPatch(this);
-            TabControl.TabPages.Add("Director");
-            DirectorPatch.Parent = TabControl.TabPages[2];
-            DirectorPatch.Dock = DockStyle.Fill;
+            // Size window to fit the Jailbreak content
+            var contentSize = Jailbreak.PreferredSize;
+            var chromeWidth = Width - ClientSize.Width;
+            var chromeHeight = Height - ClientSize.Height;
+            var menuHeight = menuStrip1.Height;
+            var statusHeight = splitContainer3.Height - splitContainer3.SplitterDistance;
+            Width = contentSize.Width + chromeWidth + Jailbreak.Margin.Horizontal + 10;
+            Height = contentSize.Height + chromeHeight + menuHeight + statusHeight + 10;
+            MaximizeBox = false;
 
             CenterToScreen();
 
@@ -63,8 +57,6 @@ namespace Garry.Control4.Jailbreak.UI
 
         private void OnLoaded(object sender, EventArgs e)
         {
-            DirectorDisconnected();
-
             Director.RefreshList();
         }
 
@@ -80,18 +72,14 @@ namespace Garry.Control4.Jailbreak.UI
 
         private void OpenComposerFolder(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start("C:\\Program Files (x86)\\Control4\\Composer");
+            var dir = Jailbreak.ComposerInstallDir ?? @"C:\Program Files (x86)\Control4\Composer\Pro";
+            System.Diagnostics.Process.Start(dir);
         }
 
         private void OpenComposerSettingsFolder(object sender, EventArgs e)
         {
             System.Diagnostics.Process.Start(
                 $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\Control4");
-        }
-
-        private void DirectorDisconnected()
-        {
-            Director.DirectorDisconnected();
         }
 
         private void ViewOnGithub(object sender, EventArgs e)
