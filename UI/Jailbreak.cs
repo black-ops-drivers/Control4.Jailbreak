@@ -777,6 +777,8 @@ namespace Garry.Control4.Jailbreak.UI
                 }
                 log.WriteSuccess("connected\n");
 
+                SyncControllerClock(log, scp);
+
                 if (DownloadRootDeviceSshKeys(log, scp, localKeysFolder, warnings))
                 {
                     PatchDirectorySshAuthorizedKeysFile(log, scp, localKeysFolder);
@@ -1040,6 +1042,49 @@ namespace Garry.Control4.Jailbreak.UI
             {
                 log.WriteError("Reboot failed:\n");
                 log.WriteError(ex);
+            }
+        }
+
+        /// <summary>
+        /// Checks the controller's clock and corrects it if it's more than 24 hours off.
+        /// A wrong clock (e.g. dead CMOS battery) causes TLS certificate validation failures.
+        /// </summary>
+        private static void SyncControllerClock(LogWindow log, ScpClient scp)
+        {
+            try
+            {
+                using (var ssh = new SshClient(scp.ConnectionInfo))
+                {
+                    ssh.Connect();
+
+                    var result = ssh.RunCommand("date +%s");
+                    if (result.ExitStatus != 0 || !long.TryParse(result.Result.Trim(), out var remoteEpoch))
+                    {
+                        ssh.Disconnect();
+                        return;
+                    }
+
+                    var localEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    var drift = Math.Abs(localEpoch - remoteEpoch);
+
+                    if (drift > 120) // More than 2 minutes off
+                    {
+                        var utcNow = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+                        log.WriteNormal($"Controller clock is off by {TimeSpan.FromSeconds(drift):d'd 'h'h 'm'm'} — correcting... ");
+                        ssh.RunCommand($"date -u -s \"{utcNow}\"");
+                        log.WriteSuccess("done\n");
+                    }
+
+                    log.WriteTrace("Syncing hardware clock... ");
+                    ssh.RunCommand("hwclock -w 2>/dev/null");
+                    log.WriteTrace("done\n");
+
+                    ssh.Disconnect();
+                }
+            }
+            catch
+            {
+                // Non-fatal — don't block the jailbreak if clock sync fails
             }
         }
 
