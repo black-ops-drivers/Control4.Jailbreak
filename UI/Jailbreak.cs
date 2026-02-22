@@ -869,11 +869,26 @@ namespace Garry.Control4.Jailbreak.UI
 
         private static string DedupeX509CertChain(string certChain)
         {
-            return string.Join("\n", certChain
-                    .Split(new[] { "-----END CERTIFICATE-----" }, StringSplitOptions.RemoveEmptyEntries)
-                    .Where(cert => !string.IsNullOrWhiteSpace(cert))
-                    .Select(cert => cert.Trim() + "\n-----END CERTIFICATE-----")
-                    .GroupBy(cert => new X509Certificate2(Encoding.UTF8.GetBytes(cert)).Subject)
+            // Extract complete PEM certificate blocks, skipping any truncated/malformed entries
+            var certs = new List<string>();
+            const string beginMarker = "-----BEGIN CERTIFICATE-----";
+            const string endMarker = "-----END CERTIFICATE-----";
+            var startIdx = 0;
+            while ((startIdx = certChain.IndexOf(beginMarker, startIdx, StringComparison.Ordinal)) >= 0)
+            {
+                var endIdx = certChain.IndexOf(endMarker, startIdx, StringComparison.Ordinal);
+                if (endIdx < 0) break; // Truncated cert — skip
+                var pem = certChain.Substring(startIdx, endIdx - startIdx + endMarker.Length).Trim();
+                certs.Add(pem);
+                startIdx = endIdx + endMarker.Length;
+            }
+
+            return string.Join("\n", certs
+                    .GroupBy(cert =>
+                    {
+                        try { return new X509Certificate2(Encoding.UTF8.GetBytes(cert)).Subject; }
+                        catch { return cert; } // Fallback: keep unparseable certs, dedupe by content
+                    })
                     .Select(group => group.Last()))
                 .Trim();
         }
@@ -1110,7 +1125,19 @@ namespace Garry.Control4.Jailbreak.UI
                 }
                 catch
                 {
-                    return null;
+                    // OS 3.3 and earlier: no HTTPS on 443, try the node API directly on port 3000
+                    try
+                    {
+                        using (var client = new WebClient())
+                        {
+                            var json = client.DownloadString($"http://{ipAddress}:3000/api/v1/platform_status");
+                            return new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(json);
+                        }
+                    }
+                    catch
+                    {
+                        return null;
+                    }
                 }
             });
 
@@ -1416,7 +1443,7 @@ f:close()
         // Management pack installation
         // -------------------------------------------------------------------
 
-        private void InstallManagementPack(object sender, EventArgs e)
+        private async void InstallManagementPack(object sender, EventArgs e)
         {
             var log = new LogWindow(_mainWindow, "Install Management Pack");
             try
@@ -1445,7 +1472,7 @@ f:close()
 
                 // Find a matching SOAP version
                 log.WriteNormal("Querying Control4 update service... ");
-                var versions = GetComposerVersions();
+                var versions = await Task.Run(() => GetComposerVersions());
                 if (versions == null || versions.Length == 0)
                 {
                     log.WriteError("No versions found from update service.\n");
@@ -1463,7 +1490,10 @@ f:close()
 
                 log.WriteHeader("PACKAGE INFO");
                 log.WriteNormal("Querying packages... ");
-                if (!GetDriversPackageInfo(matchedVersion, out var pkgName, out var pkgUrl, out var pkgSize, out var pkgChecksum))
+                string pkgName = null, pkgUrl = null, pkgChecksum = null;
+                long pkgSize = 0;
+                var found = await Task.Run(() => GetDriversPackageInfo(matchedVersion, out pkgName, out pkgUrl, out pkgSize, out pkgChecksum));
+                if (!found)
                 {
                     log.WriteError("No management pack package found for this version.\n");
                     return;
@@ -1481,10 +1511,23 @@ f:close()
 
                 using (var client = new WebClient())
                 {
-                    client.DownloadFile(pkgUrl, tempFile);
+                    client.Proxy = null; // Bypass system/dead proxy
+                    var lastPercent = -1;
+                    client.DownloadProgressChanged += (s, args) =>
+                    {
+                        if (args.ProgressPercentage == lastPercent) return;
+                        lastPercent = args.ProgressPercentage;
+                        BeginInvoke((Action)(() =>
+                            log.WriteProgress($"Downloading... {args.ProgressPercentage}% ({args.BytesReceived / 1024 / 1024} MB / {args.TotalBytesToReceive / 1024 / 1024} MB)")));
+                    };
+                    log.FormClosing += (s, args) =>
+                    {
+                        client.CancelAsync();
+                    };
+                    await client.DownloadFileTaskAsync(pkgUrl, tempFile);
                 }
 
-                log.WriteSuccess("Download complete!\n");
+                log.WriteSuccess("\nDownload complete!\n");
 
                 if (!string.IsNullOrEmpty(pkgChecksum))
                 {
@@ -1569,7 +1612,7 @@ f:close()
                 if (pkgName.StartsWith("Drivers-", StringComparison.OrdinalIgnoreCase))
                 {
                     name = pkgName;
-                    url = pkg.Element(ns + "Url")?.Value ?? "";
+                    url = (pkg.Element(ns + "Url")?.Value ?? "").Replace("http://", "https://");
                     long.TryParse(pkg.Element(ns + "Size")?.Value ?? "0", out size);
                     checksum = pkg.Element(ns + "Checksum")?.Value ?? "";
                     return true;

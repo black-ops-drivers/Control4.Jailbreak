@@ -203,7 +203,7 @@ namespace Garry.Control4.Jailbreak.UI
             this.panelCredentials.Location = new System.Drawing.Point(6, 472);
             this.panelCredentials.Margin = new System.Windows.Forms.Padding(6, 6, 6, 0);
             this.panelCredentials.Name = "panelCredentials";
-            this.panelCredentials.Size = new System.Drawing.Size(940, 60);
+            this.panelCredentials.Size = new System.Drawing.Size(940, 70);
             this.panelCredentials.TabIndex = 6;
             //
             // labelIpAddress
@@ -269,7 +269,7 @@ namespace Garry.Control4.Jailbreak.UI
             this.panelMac.Location = new System.Drawing.Point(6, 538);
             this.panelMac.Margin = new System.Windows.Forms.Padding(6, 6, 6, 14);
             this.panelMac.Name = "panelMac";
-            this.panelMac.Size = new System.Drawing.Size(940, 60);
+            this.panelMac.Size = new System.Drawing.Size(940, 70);
             this.panelMac.TabIndex = 7;
             //
             // labelMacAddress

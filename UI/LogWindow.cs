@@ -17,6 +17,7 @@ namespace Garry.Control4.Jailbreak.UI
 
         private void Write(string v)
         {
+            _progressLineStart = -1;
             textBox.AppendText(v);
 
             textBox.ScrollToCaret();
@@ -64,6 +65,29 @@ namespace Garry.Control4.Jailbreak.UI
         {
             textBox.SelectionColor = Color.Blue;
             Write(v);
+        }
+
+        private int _progressLineStart = -1;
+
+        internal void WriteProgress(string v)
+        {
+            if (_progressLineStart >= 0)
+            {
+                // Replace the previous progress text in-place
+                textBox.Select(_progressLineStart, textBox.TextLength - _progressLineStart);
+                textBox.SelectionColor = Color.Gray;
+                textBox.SelectedText = v;
+                _progressLineStart = textBox.TextLength - v.Length;
+            }
+            else
+            {
+                _progressLineStart = textBox.TextLength;
+                textBox.SelectionColor = Color.Gray;
+                textBox.AppendText(v);
+            }
+
+            textBox.ScrollToCaret();
+            textBox.Refresh();
         }
 
         internal void WriteHeader(string title)
