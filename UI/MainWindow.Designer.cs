@@ -179,7 +179,7 @@ namespace Garry.Control4.Jailbreak.UI
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainWindow";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
-            this.Text = "Garry\'s Control4 Jailbreak";
+            this.Text = "Control4 Jailbreak";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();

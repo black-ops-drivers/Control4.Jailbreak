@@ -92,7 +92,7 @@ namespace Garry.Control4.Jailbreak.UI
 
         private void ViewOnGithub(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start("https://github.com/garrynewman/Control4.Jailbreak");
+            System.Diagnostics.Process.Start("https://github.com/black-ops-drivers/Control4.Jailbreak");
         }
 
         private void FileAndQuit(object sender, EventArgs e)
