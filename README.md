@@ -1,22 +1,28 @@
 # What
 
-Jailbreak tool for Control4 3.2.1 - allowing add/rename/move rooms/drivers/devices without being a dealer.
+Jailbreak tool for Control4. Lets you add, rename and move rooms, drivers and devices in Composer Pro without being a dealer.
+
+Check the [latest release](https://github.com/black-ops-drivers/Control4.Jailbreak/releases/latest) for the Composer and controller OS versions it supports.
 
 # Why
 
-I'm a nerd. I got home automation in my house so I could play with it, so I could write my own drivers and make it do cool stuff. By default you can't do that without being an authorized dealer - unless you jailbreak your Director.
+Home automation is more fun when you can play with it. Write your own drivers, make your house do cool stuff. By default you can't touch your own project without going through an authorized dealer.
 
-There are a few dodgy tools floating around that achieve the same thing, but the process is over-complicated, error prone and out of date.
-
-I thought it would be safer/easier in the long run to write something open source.
+This tool is open source, so you can see exactly what it changes. And if you change your mind, it can undo itself.
 
 # How
 
-Head over to the [releases page](https://github.com/garrynewman/Control4.Jailbreak/releases) and download the zip (not the source). Unzip and run C4Jailbreak.exe.
+1. Head over to the [releases page](https://github.com/black-ops-drivers/Control4.Jailbreak/releases/latest) and download the zip (not the source). Unzip and run C4Jailbreak.exe.
+2. Install the Composer Pro version listed in the release notes.
+3. Enter your controller's IP address and click **Jailbreak**.
+4. If the status bar says "Management pack not installed", click **Install Pack**.
+5. Open Composer and connect to your project.
 
-## Follow Each Step
+The release notes have the full steps for each version, including how to upgrade your controller.
 
-![Steps](https://files.facepunch.com/garry/aba22fcf-672e-41e1-8184-f74d4d8a0b53.png)
+## Undo It
+
+Click the arrow next to **Jailbreak** and pick **Revert**. It undoes the jailbreak on your PC and on the controller.
 
 ## Enjoy
 
@@ -24,8 +30,8 @@ You're all done
 
 # Other stuff
 
-Everything is at your own risk, obviously. If this tool leads to your house burning down you can't blame me.
+Everything is at your own risk, obviously. If this tool leads to your house burning down you can't blame us.
 
-To Control4 - please don't be angry at this tool. I love my control4 automated house and would spend a ton more time and money with you guys if I didn't have to do it through a dealer every time. If you want to contact me I'm at garrynewman@gmail.com <3
+Originally written by Garry Newman. Now maintained by Black Ops Drivers.
 
-We have a small reddit group for Control4 DIY over at https://www.reddit.com/r/C4diy/ - feel free to ask for help here.
+For help, the Control4 DIY community is over at https://www.reddit.com/r/C4diy/.
