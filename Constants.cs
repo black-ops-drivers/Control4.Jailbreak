@@ -2,7 +2,7 @@ namespace Garry.Control4.Jailbreak
 {
     public static class Constants
     {
-        public const string Version = "9.2";
+        public const string Version = "9.3";
 
         /// <summary>
         /// The cert for composer needs to be named cacert-*.pem
@@ -56,12 +56,12 @@ namespace Garry.Control4.Jailbreak
         /// <summary>
         /// The OS version this tool was tested against.
         /// </summary>
-        public const string TargetOsVersion = @"4.2.1.758346";
+        public const string TargetOsVersion = @"4.3.0.766029";
 
         /// <summary>
         /// The Composer version this tool was tested against.
         /// </summary>
-        public const string TargetComposerVersion = @"2026.9.16";
+        public const string TargetComposerVersion = @"2026.10.28";
 
         /// <summary>
         /// The file path to the Windows Hosts file, typically used for mapping hostnames to IP addresses.

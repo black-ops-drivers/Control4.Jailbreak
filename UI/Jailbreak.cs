@@ -329,7 +329,7 @@ namespace Garry.Control4.Jailbreak.UI
                 log.WriteWarning("failed — attempting to restore SSH access\n");
 
                 log.WriteNormal("Restoring SSH password authentication... ");
-                ApplySshRestoreExploit(inputs, GetWritableDriverId(inputs));
+                ApplySshRestoreExploit(inputs);
                 log.WriteSuccess("done\n");
 
                 log.WriteNormal("Reloading SSH service... ");
@@ -1196,7 +1196,7 @@ namespace Garry.Control4.Jailbreak.UI
                     log.WriteWarning("failed — attempting to restore SSH access\n");
 
                     log.WriteNormal("Restoring SSH password authentication... ");
-                    ApplySshRestoreExploit(inputs, GetWritableDriverId(inputs));
+                    ApplySshRestoreExploit(inputs);
                     log.WriteSuccess("done\n");
 
                     log.WriteNormal("Reloading SSH service... ");
@@ -2134,7 +2134,7 @@ namespace Garry.Control4.Jailbreak.UI
             return new System.Net.Http.HttpClient(handler);
         }
 
-        private string GetWritableDriverId(JailbreakInputs inputs)
+        private List<string> GetWritableDriverIds(JailbreakInputs inputs)
         {
             using (var client = CreateHttpClient())
             {
@@ -2150,30 +2150,38 @@ namespace Garry.Control4.Jailbreak.UI
                 {
                     MaxJsonLength = int.MaxValue
                 };
+
+                var luaDriverIds = new List<string>();
+                var allDriverIds = new List<string>();
                 if (serializer.DeserializeObject(content) is object[] items)
                 {
                     foreach (var item in items)
                     {
                         if (item is Dictionary<string, object> itemDict &&
-                            itemDict.TryGetValue("name", out var nameObj))
+                            itemDict.TryGetValue("id", out var idObj))
                         {
-                            var name = nameObj.ToString();
-                            if (name == "Data Analytics Agent" || name == "Stations")
+                            var id = idObj.ToString();
+                            allDriverIds.Add(id);
+                            if (itemDict.TryGetValue("control", out var controlObj) &&
+                                controlObj?.ToString() == "lua_gen")
                             {
-                                if (itemDict.TryGetValue("id", out var idObj))
-                                {
-                                    return idObj.ToString();
-                                }
+                                luaDriverIds.Add(id);
                             }
                         }
                     }
                 }
 
-                throw new Exception("No writable driver found in project!");
+                var candidates = luaDriverIds.Count > 0 ? luaDriverIds : allDriverIds;
+                if (candidates.Count == 0)
+                {
+                    throw new Exception("No drivers found in project to restore SSH through!");
+                }
+
+                return candidates;
             }
         }
 
-        private void ApplySshRestoreExploit(JailbreakInputs inputs, string driverId)
+        private void ApplySshRestoreExploit(JailbreakInputs inputs)
         {
             const string luaExploit = @"-- Only modify sshd_config to enable password authentication
 local ssh_path = '/etc/ssh/sshd_config'
@@ -2196,6 +2204,7 @@ end
 f:close()
 ";
 
+            var driverIds = GetWritableDriverIds(inputs);
             using (var client = CreateHttpClient())
             {
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
@@ -2212,11 +2221,31 @@ f:close()
                     }
                 };
                 var json = serializer.Serialize(commandData);
-                var content = new System.Net.Http.StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = client
-                    .PostAsync($"https://{inputs.IpAddress}:443/api/v1/items/{driverId}/commands", content).Result;
-                response.EnsureSuccessStatusCode();
+                var accepted = 0;
+                Exception lastError = null;
+                foreach (var driverId in driverIds)
+                {
+                    try
+                    {
+                        var content = new System.Net.Http.StringContent(json, Encoding.UTF8, "application/json");
+                        var response = client
+                            .PostAsync($"https://{inputs.IpAddress}:443/api/v1/items/{driverId}/commands", content).Result;
+                        response.EnsureSuccessStatusCode();
+                        accepted++;
+                    }
+                    catch (Exception ex)
+                    {
+                        lastError = ex;
+                    }
+                }
+
+                if (accepted == 0)
+                {
+                    throw new Exception(
+                        "SSH restore failed: no driver accepted the LUA command." +
+                        (lastError != null ? " " + lastError.Message : ""));
+                }
             }
         }
 
