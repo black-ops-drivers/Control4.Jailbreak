@@ -29,12 +29,13 @@ namespace Garry.Control4.Jailbreak.UI
         private readonly Timer _debounceTimer = new Timer { Interval = 800 };
 
         // Split-button action mode. The arrow opens the menu to pick a mode; the button runs it.
-        private enum ActionMode { Jailbreak = 0, Ssh = 1, Revert = 2 }
+        private enum ActionMode { Jailbreak = 0, Ssh = 1, Revert = 2, Check = 3 }
         private ActionMode _mode = ActionMode.Jailbreak;
         private System.Windows.Forms.ContextMenuStrip _modeMenu;
         private System.Windows.Forms.ToolStripMenuItem _miJailbreak;
         private System.Windows.Forms.ToolStripMenuItem _miSsh;
         private System.Windows.Forms.ToolStripMenuItem _miRevert;
+        private System.Windows.Forms.ToolStripMenuItem _miCheck;
 
         // Composer install path detection
         public string ComposerInstallDir { get; private set; }
@@ -226,6 +227,9 @@ namespace Garry.Control4.Jailbreak.UI
                         case ActionMode.Revert:
                             UnjailbreakWorker(inputs, log, warnings);
                             break;
+                        case ActionMode.Check:
+                            C4DiagCheckWorker(inputs, log);
+                            break;
                         default:
                             JailbreakWorker(inputs, log, warnings);
                             break;
@@ -249,6 +253,7 @@ namespace Garry.Control4.Jailbreak.UI
             {
                 case ActionMode.Ssh: return "Set Up SSH Access";
                 case ActionMode.Revert: return "Revert";
+                case ActionMode.Check: return "Check for c4diagd";
                 default: return "Jailbreak";
             }
         }
@@ -261,10 +266,14 @@ namespace Garry.Control4.Jailbreak.UI
                 "SSH Access", null, (s, e) => SetMode(ActionMode.Ssh));
             _miRevert = new System.Windows.Forms.ToolStripMenuItem(
                 "Revert", null, (s, e) => SetMode(ActionMode.Revert));
+            _miCheck = new System.Windows.Forms.ToolStripMenuItem(
+                "Check for c4diagd (read-only)", null, (s, e) => SetMode(ActionMode.Check));
             _modeMenu = new System.Windows.Forms.ContextMenuStrip();
             _modeMenu.Items.Add(_miJailbreak);
             _modeMenu.Items.Add(_miSsh);
             _modeMenu.Items.Add(_miRevert);
+            _modeMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+            _modeMenu.Items.Add(_miCheck);
 
             // buttonJailbreak is a SplitButton: the right-hand arrow zone opens the mode menu,
             // the rest runs the current mode. Reserve right padding so the label clears the arrow.
@@ -275,7 +284,7 @@ namespace Garry.Control4.Jailbreak.UI
 
             toolTip.SetToolTip(buttonJailbreak,
                 "Click to run the selected action.\r\n" +
-                "Click the arrow to switch between Jailbreak, SSH Access and Revert.");
+                "Click the arrow to switch between Jailbreak, SSH Access, Revert and the c4diagd check.");
 
             UpdateActionUi();
         }
@@ -295,6 +304,7 @@ namespace Garry.Control4.Jailbreak.UI
             {
                 case ActionMode.Ssh: label = " Set Up SSH"; break;
                 case ActionMode.Revert: label = " Revert"; break;
+                case ActionMode.Check: label = " Check c4diagd"; break;
                 default: label = " Jailbreak"; break;
             }
 
@@ -303,6 +313,7 @@ namespace Garry.Control4.Jailbreak.UI
             if (_miJailbreak != null) _miJailbreak.Checked = _mode == ActionMode.Jailbreak;
             if (_miSsh != null) _miSsh.Checked = _mode == ActionMode.Ssh;
             if (_miRevert != null) _miRevert.Checked = _mode == ActionMode.Revert;
+            if (_miCheck != null) _miCheck.Checked = _mode == ActionMode.Check;
 
             // The split.io block only applies to a full jailbreak.
             checkBoxBlockSplitIo.Visible = _mode == ActionMode.Jailbreak;
@@ -396,6 +407,101 @@ namespace Garry.Control4.Jailbreak.UI
             catch (Exception ex)
             {
                 log.WriteError("SSH setup failed:\n");
+                log.WriteError(ex);
+            }
+        }
+
+        // -------------------------------------------------------------------
+        // c4diagd check: read-only scan for the Nov 2026 c4diagd / c4hijack kit.
+        // Runs c4diag-check.sh (embedded; source and updates:
+        // https://github.com/jwheeler188/c4diag-check). Deliberately does NOT use
+        // ConnectToDirector, because that can apply the SSH restore patch; this
+        // mode must not change anything on the controller.
+        // -------------------------------------------------------------------
+
+        private const string C4DiagRemotePath = "/tmp/c4diag-check.sh";
+
+        private void C4DiagCheckWorker(JailbreakInputs inputs, LogWindow log)
+        {
+            try
+            {
+                log.WriteHeader("C4DIAGD CHECK");
+                log.WriteNormal("Read-only check for the c4diagd / c4hijack kit. Nothing on the controller is changed;\n" +
+                                "the script is copied to /tmp, run, and deleted.\n\n");
+
+                string script;
+                using (var stream = typeof(Jailbreak).Assembly.GetManifestResourceStream(Constants.C4DiagCheckResource))
+                {
+                    if (stream == null)
+                    {
+                        log.WriteError("The check script is missing from this build.\n");
+                        return;
+                    }
+
+                    using (var reader = new StreamReader(stream))
+                        script = reader.ReadToEnd().Replace("\r\n", "\n");
+                }
+
+                string output;
+                int exitStatus;
+                using (var ssh = new SshClient(SshConnection(inputs)))
+                using (var scp = new ScpClient(SshConnection(inputs)))
+                {
+                    try
+                    {
+                        ssh.Connect();
+                        scp.Connect();
+                    }
+                    catch (Exception ex)
+                    {
+                        log.WriteError($"Could not log in to {inputs.IpAddress} over SSH: {ex.Message}\n");
+                        log.WriteWarning("This check needs root SSH. If SSH is not set up yet, run \"SSH Access\" first.\n");
+                        return;
+                    }
+
+                    log.WriteProgress("Copying the check script...");
+                    using (var upload = new MemoryStream(new UTF8Encoding(false).GetBytes(script)))
+                        scp.Upload(upload, C4DiagRemotePath);
+
+                    log.WriteProgress("Running the check (can take a minute)...");
+                    var cmd = ssh.CreateCommand($"sh {C4DiagRemotePath}; rc=$?; rm -f {C4DiagRemotePath}; exit $rc");
+                    cmd.CommandTimeout = TimeSpan.FromMinutes(5);
+                    output = cmd.Execute() + cmd.Error;
+                    exitStatus = cmd.ExitStatus;
+                    log.WriteNormal("\n");
+                }
+
+                foreach (var line in output.Replace("\r\n", "\n").Split('\n'))
+                {
+                    if (line.StartsWith("ARMED") || line.StartsWith("INFECTED") || line.Contains("<-- infection"))
+                        log.WriteError(line + "\n");
+                    else if (line.StartsWith("PREVIOUSLY INFECTED") || line.StartsWith("POSSIBLE PAST INFECTION") || line.Contains("<--"))
+                        log.WriteWarning(line + "\n");
+                    else if (line.StartsWith("NO INDICATORS FOUND"))
+                        log.WriteSuccess(line + "\n");
+                    else if (line.StartsWith("==="))
+                        log.WriteHighlight(line + "\n");
+                    else
+                        log.WriteNormal(line + "\n");
+                }
+
+                var reportFolder = Constants.C4DiagReportsFolder;
+                Directory.CreateDirectory(reportFolder);
+                var reportPath = Path.Combine(reportFolder,
+                    $"c4diag-{inputs.IpAddress}-{DateTime.Now:yyyy-MM-dd_HHmm}.txt");
+                File.WriteAllText(reportPath, output, new UTF8Encoding(false));
+
+                log.WriteHeader("DONE");
+                log.WriteNormal($"Report saved to {Path.GetFullPath(reportPath)}\n");
+                if (output.Contains("ARMED / LOCKED INDICATORS FOUND"))
+                    log.WriteError("Armed indicators: do NOT reboot, kill processes or factory reset. Contact Control4.\n");
+                log.WriteNormal("Guide and latest script: https://github.com/jwheeler188/c4diag-check\n");
+                if (exitStatus != 0)
+                    log.WriteTrace($"(check script exit status {exitStatus})\n");
+            }
+            catch (Exception ex)
+            {
+                log.WriteError("c4diagd check failed:\n");
                 log.WriteError(ex);
             }
         }

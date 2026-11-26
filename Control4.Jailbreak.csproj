@@ -115,6 +115,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility\Sddp.cs" />
     <Compile Include="Utility\Sddp.DeviceResponse.cs" />
+    <EmbeddedResource Include="Tools\c4diag\c4diag-check.sh">
+      <LogicalName>Control4.Jailbreak.c4diag-check.sh</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\Jailbreak.resx">
       <DependentUpon>Jailbreak.cs</DependentUpon>
     </EmbeddedResource>
