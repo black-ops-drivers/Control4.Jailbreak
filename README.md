@@ -20,6 +20,14 @@ This tool is open source, so you can see exactly what it changes. And if you cha
 
 The release notes have the full steps for each version, including how to upgrade your controller.
 
+## Check for the c4diagd kit
+
+In November 2026 a malicious "c4diagd" kit was staged on many Control4 controllers. To check yours, click the arrow next to **Jailbreak** and pick **Check for c4diagd (read-only)**, then click the button. It needs root SSH (run **SSH Access** first if you haven't). The check copies a script to `/tmp` on the controller, runs it, deletes it, and saves a report in the `c4diag reports` folder next to the app. It changes nothing on the controller.
+
+Results: **NO INDICATORS FOUND**, **POSSIBLE PAST INFECTION**, **PREVIOUSLY INFECTED, NOW CLEAN**, **INFECTED (staged)** or **ARMED**. If it says ARMED, do not reboot or reset the controller; contact Control4.
+
+The script is also in [`Tools/c4diag`](Tools/c4diag) if you want to run it by hand. It comes from [jwheeler188/c4diag-check](https://github.com/jwheeler188/c4diag-check), which has the latest version, a step-by-step guide and launchers for Windows and Mac.
+
 ## Undo It
 
 Click the arrow next to **Jailbreak** and pick **Revert**. It undoes the jailbreak on your PC and on the controller.

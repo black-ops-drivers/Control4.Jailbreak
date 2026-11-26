@@ -30,6 +30,16 @@ namespace Garry.Control4.Jailbreak
         public const string KeysFolder = "Keys - DO NOT DELETE";
 
         /// <summary>
+        /// Manifest name of the embedded c4diagd check script (Tools/c4diag/c4diag-check.sh)
+        /// </summary>
+        public const string C4DiagCheckResource = "Control4.Jailbreak.c4diag-check.sh";
+
+        /// <summary>
+        /// Where c4diagd check reports are saved
+        /// </summary>
+        public const string C4DiagReportsFolder = "c4diag reports";
+
+        /// <summary>
         /// How many days until the certificate expires. Doesn't seem any harm in setting this to
         /// a huge value so you don't have to re-crack every year.
         /// </summary>
